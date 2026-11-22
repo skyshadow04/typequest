@@ -25,9 +25,15 @@ import type { StoryDecisions } from "@/game/types/story";
 import BattleInterface from "@/game/components/BattleInterface";
 
 import {
+  activateSaveUser,
   loadGame,
+  replaceSaveSlots,
   saveGame,
 } from "@/game/engine/SaveEngine";
+import {
+  getCurrentSupabaseUser,
+  syncSaveSlotsFromDatabase,
+} from "@/lib/supabase/database";
 
 import { INITIAL_INVENTORY } from "@/game/engine/InventoryEngine";
 import { createCharacter } from "@/game/engine/ClassEngine";
@@ -44,21 +50,47 @@ export default function GamePage() {
   const [saveMessage, setSaveMessage] = useState("");
 
   useEffect(() => {
-    const savedGame = loadGame();
+    let active = true;
 
-    if (savedGame) {
-      const savedNode = getStoryNode(
-        chapter1,
-        savedGame.currentNodeId
-      );
+    async function initializeGame() {
+      const user = await getCurrentSupabaseUser();
+      if (!active) return;
 
-      if (savedNode) {
-        setCurrentNodeId(savedGame.currentNodeId);
-        setDecisions(savedGame.decisions as StoryDecisions);
+      activateSaveUser(user?.id ?? null);
+
+      if (!user) {
+        replaceSaveSlots([]);
+        return;
       }
+
+      const databaseSlots = await syncSaveSlotsFromDatabase();
+      const currentUser = await getCurrentSupabaseUser();
+
+      if (!active || currentUser?.id !== user.id) return;
+      if (databaseSlots !== null) replaceSaveSlots(databaseSlots);
+
+      const savedGame = loadGame();
+
+      if (savedGame) {
+        const savedNode = getStoryNode(
+          chapter1,
+          savedGame.currentNodeId
+        );
+
+        if (savedNode) {
+          setCurrentNodeId(savedGame.currentNodeId);
+          setDecisions(savedGame.decisions as StoryDecisions);
+        }
+      }
+
+      setGameLoaded(true);
     }
 
-    setGameLoaded(true);
+    void initializeGame();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Automatically save story progress.

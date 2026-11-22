@@ -41,8 +41,11 @@ export type SaveSlot = {
 const SAVE_KEY = "typequest-save";
 const SLOTS_KEY = "typequest-save-slots";
 const ACTIVE_SLOT_KEY = "typequest-active-slot";
+const ACTIVE_USER_KEY = "typequest-save-user";
+const CHARACTER_KEY = "typequest-character";
 
-const DEFAULT_SLOT_ID = "save-slot-1";
+const DEFAULT_SLOT_ID = "00000000-0000-4000-8000-000000000001";
+const LEGACY_DEFAULT_SLOT_ID = "save-slot-1";
 
 function isValidSave(data: unknown): data is GameSaveData {
   if (!data || typeof data !== "object") return false;
@@ -105,12 +108,30 @@ function writeSlots(slots: SaveSlot[]): void {
   localStorage.setItem(SLOTS_KEY, JSON.stringify(slots));
 }
 
+export function activateSaveUser(userId: string | null): void {
+  if (typeof window === "undefined") return;
+
+  const nextUserId = userId ?? "signed-out";
+
+  if (localStorage.getItem(ACTIVE_USER_KEY) === nextUserId) return;
+
+  localStorage.removeItem(SLOTS_KEY);
+  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(ACTIVE_SLOT_KEY);
+  localStorage.removeItem(CHARACTER_KEY);
+  localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
+}
+
 export function replaceSaveSlots(slots: SaveSlot[]): void {
   if (typeof window === "undefined") return;
 
   writeSlots(slots);
 
-  if (slots.length === 0) return;
+  if (slots.length === 0) {
+    localStorage.removeItem(ACTIVE_SLOT_KEY);
+    syncLegacySave(null);
+    return;
+  }
 
   const activeSlotId = localStorage.getItem(ACTIVE_SLOT_KEY);
 
@@ -140,6 +161,25 @@ function ensureSlots(): SaveSlot[] {
   if (typeof window === "undefined") return [];
 
   let slots = readSlots();
+
+  const legacyDefaultSlot = slots.find(
+    (slot) => slot.id === LEGACY_DEFAULT_SLOT_ID
+  );
+
+  if (legacyDefaultSlot) {
+    slots = slots.map((slot) =>
+      slot.id === LEGACY_DEFAULT_SLOT_ID
+        ? { ...slot, id: DEFAULT_SLOT_ID }
+        : slot
+    );
+    writeSlots(slots);
+
+    if (
+      localStorage.getItem(ACTIVE_SLOT_KEY) === LEGACY_DEFAULT_SLOT_ID
+    ) {
+      localStorage.setItem(ACTIVE_SLOT_KEY, DEFAULT_SLOT_ID);
+    }
+  }
 
   if (slots.length === 0) {
     let oldSave: GameSaveData | null = null;

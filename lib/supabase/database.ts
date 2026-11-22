@@ -67,7 +67,12 @@ export async function upsertSaveSlotToDatabase(slot: SaveSlot): Promise<boolean>
   );
 
   if (error) {
-    console.error("Failed to save slot to database:", error);
+    console.error("Failed to save slot to database:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return false;
   }
 

@@ -32,6 +32,7 @@ import {
   setActiveSaveSlot,
   loadSaveSlot,
   replaceSaveSlots,
+  activateSaveUser,
   type SaveSlot,
 } from "@/game/engine/SaveEngine";
 
@@ -83,10 +84,6 @@ export default function Home() {
 
   const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([]);
   const [activeSlotId, setActiveSlotId] = useState("");
-  const [userEmail, setUserEmail] = useState("");
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authMessage, setAuthMessage] = useState("");
 
   const selectedStats = CHARACTER_CLASSES[selectedClass];
 
@@ -98,22 +95,28 @@ export default function Home() {
   }
 
   useEffect(() => {
-    refreshSaveSlots();
-
     const supabase = createSupabaseBrowserClient();
 
     async function syncUserSession() {
       const user = await getCurrentSupabaseUser();
-      setUserEmail(user?.email ?? "");
+      activateSaveUser(user?.id ?? null);
 
-      if (!user) return;
+      if (!user) {
+        replaceSaveSlots([]);
+        refreshSaveSlots();
+        return;
+      }
 
       const databaseSlots = await syncSaveSlotsFromDatabase();
+      const currentUser = await getCurrentSupabaseUser();
 
-      if (databaseSlots) {
+      if (currentUser?.id !== user.id) return;
+
+      if (databaseSlots !== null) {
         replaceSaveSlots(databaseSlots);
-        refreshSaveSlots();
       }
+
+      refreshSaveSlots();
     }
 
     void syncUserSession();
@@ -214,41 +217,6 @@ export default function Home() {
     setShowCharacterCreation(true);
   }
 
-  async function signIn() {
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: authEmail,
-      password: authPassword,
-    });
-
-    setAuthMessage(
-      error ? error.message : "Signed in successfully."
-    );
-  }
-
-  async function signUp() {
-    const supabase = createSupabaseBrowserClient();
-    const { data, error } = await supabase.auth.signUp({
-      email: authEmail,
-      password: authPassword,
-    });
-
-    setAuthMessage(
-      error
-        ? error.message
-        : data.session
-          ? "Account created and signed in."
-          : "Account created. Check your email to confirm it."
-    );
-  }
-
-  async function signOut() {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    setUserEmail("");
-    setAuthMessage("Signed out.");
-  }
-
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#100f19] text-white p-6">
       <div className="relative w-full max-w-5xl min-h-[650px] rounded-2xl border border-white/10 overflow-hidden flex items-center justify-center">
@@ -323,60 +291,11 @@ export default function Home() {
               {showSettings && (
                 <div className="mt-6 bg-black/40 border border-white/10 rounded-lg p-5 max-w-xs mx-auto">
                   <h2 className="font-bold text-amber-400 mb-2">
-                    ACCOUNT
+                    GAME SETTINGS
                   </h2>
-                  {userEmail ? (
-                    <div>
-                      <p className="text-sm text-gray-300 mb-4">
-                        Signed in as <span className="text-white">{userEmail}</span>
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => void signOut()}
-                        className="w-full rounded-lg border border-white/20 py-2 text-sm hover:bg-white/10"
-                      >
-                        SIGN OUT
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="email"
-                        value={authEmail}
-                        onChange={(event) => setAuthEmail(event.target.value)}
-                        placeholder="Email"
-                        className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
-                      />
-                      <input
-                        type="password"
-                        value={authPassword}
-                        onChange={(event) => setAuthPassword(event.target.value)}
-                        placeholder="Password"
-                        className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void signIn()}
-                          className="rounded-lg bg-amber-500 text-black py-2 text-sm font-bold"
-                        >
-                          SIGN IN
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void signUp()}
-                          className="rounded-lg border border-amber-400/40 text-amber-300 py-2 text-sm font-bold"
-                        >
-                          SIGN UP
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {authMessage && (
-                    <p className="mt-3 text-xs text-gray-400">
-                      {authMessage}
-                    </p>
-                  )}
+                  <p className="text-sm text-gray-400">
+                    Additional settings will be available in a future update.
+                  </p>
                 </div>
               )}
 
