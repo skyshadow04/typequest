@@ -4,6 +4,10 @@ import type { PlayerInventory } from "@/game/types/inventory";
 import type { BattleState } from "@/game/engine/BattleEngine";
 import type { StoryChoice } from "@/game/engine/RewardEngine";
 import type { ActiveSkillState } from "@/game/engine/SkillEngine";
+import {
+  deleteSaveSlotFromDatabase,
+  upsertSaveSlotToDatabase,
+} from "@/lib/supabase/database";
 
 export type SavedBattleState = {
   storyChoice: StoryChoice;
@@ -99,6 +103,26 @@ function writeSlots(slots: SaveSlot[]): void {
   if (typeof window === "undefined") return;
 
   localStorage.setItem(SLOTS_KEY, JSON.stringify(slots));
+}
+
+export function replaceSaveSlots(slots: SaveSlot[]): void {
+  if (typeof window === "undefined") return;
+
+  writeSlots(slots);
+
+  if (slots.length === 0) return;
+
+  const activeSlotId = localStorage.getItem(ACTIVE_SLOT_KEY);
+
+  if (!slots.some((slot) => slot.id === activeSlotId)) {
+    localStorage.setItem(ACTIVE_SLOT_KEY, slots[0].id);
+  }
+
+  const activeSlot = slots.find(
+    (slot) => slot.id === (localStorage.getItem(ACTIVE_SLOT_KEY) ?? "")
+  );
+
+  syncLegacySave(activeSlot?.saveData ?? null);
 }
 
 function syncLegacySave(saveData: GameSaveData | null): void {
@@ -214,6 +238,7 @@ export function createSaveSlot(name: string): SaveSlot | null {
   const updatedSlots = [...slots, newSlot];
 
   writeSlots(updatedSlots);
+  void upsertSaveSlotToDatabase(newSlot);
 
   return newSlot;
 }
@@ -246,6 +271,9 @@ export function renameSaveSlot(
   );
 
   writeSlots(updatedSlots);
+  void upsertSaveSlotToDatabase(
+    updatedSlots.find((slot) => slot.id === slotId)!
+  );
 
   return true;
 }
@@ -314,6 +342,7 @@ export function deleteSaveSlot(slotId: string): boolean {
   }
 
   writeSlots(remainingSlots);
+  void deleteSaveSlotFromDatabase(slotId);
 
   return true;
 }
@@ -366,6 +395,9 @@ export function saveGame(
     );
 
     writeSlots(updatedSlots);
+    void upsertSaveSlotToDatabase(
+      updatedSlots.find((slot) => slot.id === activeSlotId)!
+    );
 
     // Keep the previous save key synchronized for compatibility.
     syncLegacySave(saveData);

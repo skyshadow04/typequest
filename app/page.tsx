@@ -31,10 +31,16 @@ import {
   getActiveSaveSlot,
   setActiveSaveSlot,
   loadSaveSlot,
+  replaceSaveSlots,
   type SaveSlot,
 } from "@/game/engine/SaveEngine";
 
 import type { CharacterClass } from "@/game/types/character";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  getCurrentSupabaseUser,
+  syncSaveSlotsFromDatabase,
+} from "@/lib/supabase/database";
 
 const classOptions = [
   {
@@ -77,6 +83,10 @@ export default function Home() {
 
   const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([]);
   const [activeSlotId, setActiveSlotId] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
 
   const selectedStats = CHARACTER_CLASSES[selectedClass];
 
@@ -89,6 +99,32 @@ export default function Home() {
 
   useEffect(() => {
     refreshSaveSlots();
+
+    const supabase = createSupabaseBrowserClient();
+
+    async function syncUserSession() {
+      const user = await getCurrentSupabaseUser();
+      setUserEmail(user?.email ?? "");
+
+      if (!user) return;
+
+      const databaseSlots = await syncSaveSlotsFromDatabase();
+
+      if (databaseSlots) {
+        replaceSaveSlots(databaseSlots);
+        refreshSaveSlots();
+      }
+    }
+
+    void syncUserSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      void syncUserSession();
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   function formatDate(date: string) {
@@ -101,7 +137,15 @@ export default function Home() {
     return parsedDate.toLocaleString();
   }
 
-  function startAdventure() {
+  async function startAdventure() {
+    const user = await getCurrentSupabaseUser();
+
+    if (!user) {
+      alert("Please sign in or create an account before starting an adventure.");
+      setShowSettings(true);
+      return;
+    }
+
     const character = createCharacter(characterName, selectedClass);
 
     const activeSlot = getActiveSaveSlot();
@@ -168,6 +212,41 @@ export default function Home() {
     refreshSaveSlots();
     setShowSaveSlots(false);
     setShowCharacterCreation(true);
+  }
+
+  async function signIn() {
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: authEmail,
+      password: authPassword,
+    });
+
+    setAuthMessage(
+      error ? error.message : "Signed in successfully."
+    );
+  }
+
+  async function signUp() {
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: authEmail,
+      password: authPassword,
+    });
+
+    setAuthMessage(
+      error
+        ? error.message
+        : data.session
+          ? "Account created and signed in."
+          : "Account created. Check your email to confirm it."
+    );
+  }
+
+  async function signOut() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setUserEmail("");
+    setAuthMessage("Signed out.");
   }
 
   return (
@@ -244,11 +323,60 @@ export default function Home() {
               {showSettings && (
                 <div className="mt-6 bg-black/40 border border-white/10 rounded-lg p-5 max-w-xs mx-auto">
                   <h2 className="font-bold text-amber-400 mb-2">
-                    GAME SETTINGS
+                    ACCOUNT
                   </h2>
-                  <p className="text-sm text-gray-400">
-                    Additional settings will be available in a future update.
-                  </p>
+                  {userEmail ? (
+                    <div>
+                      <p className="text-sm text-gray-300 mb-4">
+                        Signed in as <span className="text-white">{userEmail}</span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void signOut()}
+                        className="w-full rounded-lg border border-white/20 py-2 text-sm hover:bg-white/10"
+                      >
+                        SIGN OUT
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(event) => setAuthEmail(event.target.value)}
+                        placeholder="Email"
+                        className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
+                      />
+                      <input
+                        type="password"
+                        value={authPassword}
+                        onChange={(event) => setAuthPassword(event.target.value)}
+                        placeholder="Password"
+                        className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-sm"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void signIn()}
+                          className="rounded-lg bg-amber-500 text-black py-2 text-sm font-bold"
+                        >
+                          SIGN IN
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void signUp()}
+                          className="rounded-lg border border-amber-400/40 text-amber-300 py-2 text-sm font-bold"
+                        >
+                          SIGN UP
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {authMessage && (
+                    <p className="mt-3 text-xs text-gray-400">
+                      {authMessage}
+                    </p>
+                  )}
                 </div>
               )}
 
