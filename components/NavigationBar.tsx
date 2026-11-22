@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { activateSaveUser } from "@/game/engine/SaveEngine";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function NavigationBar() {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [email, setEmail] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -14,6 +13,7 @@ export default function NavigationBar() {
 
   useEffect(() => {
     let active = true;
+    const supabase = createSupabaseBrowserClient();
 
     const {
       data: { subscription },
@@ -39,12 +39,13 @@ export default function NavigationBar() {
       active = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, []);
 
   async function logOut() {
     setLoggingOut(true);
     setErrorMessage("");
 
+    const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signOut();
 
     if (error) {
