@@ -44,7 +44,7 @@ const ACTIVE_SLOT_KEY = "typequest-active-slot";
 const ACTIVE_USER_KEY = "typequest-save-user";
 const CHARACTER_KEY = "typequest-character";
 
-const DEFAULT_SLOT_ID = "00000000-0000-4000-8000-000000000001";
+const SERVER_DEFAULT_SLOT_ID = "00000000-0000-4000-8000-000000000001";
 const LEGACY_DEFAULT_SLOT_ID = "save-slot-1";
 
 function isValidSave(data: unknown): data is GameSaveData {
@@ -167,9 +167,10 @@ function ensureSlots(): SaveSlot[] {
   );
 
   if (legacyDefaultSlot) {
+    const migratedSlotId = crypto.randomUUID();
     slots = slots.map((slot) =>
       slot.id === LEGACY_DEFAULT_SLOT_ID
-        ? { ...slot, id: DEFAULT_SLOT_ID }
+        ? { ...slot, id: migratedSlotId }
         : slot
     );
     writeSlots(slots);
@@ -177,7 +178,7 @@ function ensureSlots(): SaveSlot[] {
     if (
       localStorage.getItem(ACTIVE_SLOT_KEY) === LEGACY_DEFAULT_SLOT_ID
     ) {
-      localStorage.setItem(ACTIVE_SLOT_KEY, DEFAULT_SLOT_ID);
+      localStorage.setItem(ACTIVE_SLOT_KEY, migratedSlotId);
     }
   }
 
@@ -199,10 +200,11 @@ function ensureSlots(): SaveSlot[] {
     }
 
     const now = new Date().toISOString();
+    const defaultSlotId = crypto.randomUUID();
 
     slots = [
       {
-        id: DEFAULT_SLOT_ID,
+        id: defaultSlotId,
         name: "Adventure 1",
         createdAt: now,
         updatedAt: oldSave?.savedAt ?? now,
@@ -211,7 +213,7 @@ function ensureSlots(): SaveSlot[] {
     ];
 
     writeSlots(slots);
-    localStorage.setItem(ACTIVE_SLOT_KEY, DEFAULT_SLOT_ID);
+    localStorage.setItem(ACTIVE_SLOT_KEY, defaultSlotId);
   }
 
   let activeSlotId = localStorage.getItem(ACTIVE_SLOT_KEY);
@@ -239,13 +241,13 @@ export function getSaveSlots(): SaveSlot[] {
 
 // GET THE CURRENT ACTIVE SLOT ID
 export function getActiveSaveSlotId(): string {
-  if (typeof window === "undefined") return DEFAULT_SLOT_ID;
+  if (typeof window === "undefined") return SERVER_DEFAULT_SLOT_ID;
 
   ensureSlots();
 
   return (
     localStorage.getItem(ACTIVE_SLOT_KEY) ??
-    DEFAULT_SLOT_ID
+    SERVER_DEFAULT_SLOT_ID
   );
 }
 
