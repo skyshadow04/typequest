@@ -23,6 +23,8 @@ import {
   CHARACTER_CLASSES,
   createCharacter,
 } from "@/game/engine/ClassEngine";
+import { INITIAL_INVENTORY } from "@/game/engine/InventoryEngine";
+import { chapter1 } from "@/game/data/chapters/chapter1";
 
 import {
   createSaveSlot,
@@ -33,6 +35,7 @@ import {
   loadSaveSlot,
   replaceSaveSlots,
   activateSaveUser,
+  saveGame,
   type SaveSlot,
 } from "@/game/engine/SaveEngine";
 
@@ -178,6 +181,20 @@ export default function Home() {
       "typequest-character",
       JSON.stringify(character)
     );
+
+    const saved = await saveGame(
+      character,
+      INITIAL_INVENTORY,
+      chapter1.initialNodeId,
+      {}
+    );
+
+    if (!saved) {
+      alert(
+        "Your character was created but could not be saved to your account. Check the Supabase settings and try again."
+      );
+      return;
+    }
 
     window.location.href = "/game";
   }

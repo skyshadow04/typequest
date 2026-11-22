@@ -13,7 +13,13 @@ export async function getCurrentSupabaseUser() {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase.auth.getUser();
 
-  if (error) return null;
+  if (error) {
+    console.error("Failed to get authenticated Supabase user:", {
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
 
   return data.user;
 }
@@ -52,7 +58,10 @@ export async function upsertSaveSlotToDatabase(slot: SaveSlot): Promise<boolean>
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return false;
+  if (!user) {
+    console.error("Cannot save slot: no authenticated Supabase user.");
+    return false;
+  }
 
   const { error } = await supabase.from("save_slots").upsert(
     {

@@ -278,7 +278,6 @@ export function createSaveSlot(name: string): SaveSlot | null {
   const updatedSlots = [...slots, newSlot];
 
   writeSlots(updatedSlots);
-  void upsertSaveSlotToDatabase(newSlot);
 
   return newSlot;
 }
@@ -388,13 +387,13 @@ export function deleteSaveSlot(slotId: string): boolean {
 }
 
 // SAVE THE CURRENT GAME TO THE ACTIVE SLOT
-export function saveGame(
+export async function saveGame(
   character: PlayerCharacter,
   inventory: PlayerInventory,
   currentNodeId: string,
   decisions: Record<string, string>,
   battleState?: SavedBattleState | null
-): boolean {
+): Promise<boolean> {
   if (typeof window === "undefined") return false;
 
   try {
@@ -435,14 +434,19 @@ export function saveGame(
     );
 
     writeSlots(updatedSlots);
-    void upsertSaveSlotToDatabase(
-      updatedSlots.find((slot) => slot.id === activeSlotId)!
+    const updatedSlot = updatedSlots.find(
+      (slot) => slot.id === activeSlotId
     );
+
+    if (!updatedSlot) {
+      console.error("Failed to save game: active save slot was not found.");
+      return false;
+    }
 
     // Keep the previous save key synchronized for compatibility.
     syncLegacySave(saveData);
 
-    return true;
+    return await upsertSaveSlotToDatabase(updatedSlot);
   } catch (error) {
     console.error("Failed to save game:", error);
     return false;

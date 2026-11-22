@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  AlertCircle,
   ArrowRight,
   BookOpen,
   RotateCcw,
@@ -48,6 +49,7 @@ export default function GamePage() {
   const [decisions, setDecisions] = useState<StoryDecisions>({});
   const [gameLoaded, setGameLoaded] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -115,17 +117,31 @@ export default function GamePage() {
 
     const inventory = savedGame?.inventory ?? INITIAL_INVENTORY;
 
-    saveGame(
+    let active = true;
+
+    void saveGame(
       character,
       inventory,
       currentNodeId,
       decisions
-    );
+    ).then((success) => {
+      if (!active) return;
+      setSaveError(!success);
+      setSaveMessage(
+        success
+          ? "Progress saved to your account."
+          : "Cloud save failed. Check your sign-in and Supabase settings."
+      );
+    });
+
+    return () => {
+      active = false;
+    };
   }, [currentNodeId, decisions, gameLoaded]);
 
   const currentNode = getStoryNode(chapter1, currentNodeId);
 
-  function handleManualSave() {
+  async function handleManualSave() {
     let character: PlayerCharacter;
 
     try {
@@ -143,15 +159,21 @@ export default function GamePage() {
     const savedGame = loadGame();
     const inventory = savedGame?.inventory ?? INITIAL_INVENTORY;
 
-    const success = saveGame(
+    setSaveMessage("Saving to your account...");
+    setSaveError(false);
+
+    const success = await saveGame(
       character,
       inventory,
       currentNodeId,
       decisions
     );
 
+    setSaveError(!success);
     setSaveMessage(
-      success ? "Game saved successfully!" : "Unable to save game."
+      success
+        ? "Game saved to your account."
+        : "Cloud save failed. Check your sign-in and Supabase settings."
     );
   }
 
@@ -250,8 +272,13 @@ export default function GamePage() {
 
         {/* Save Message */}
         {saveMessage && (
-          <div className="mb-5 flex items-center gap-2 text-sm text-emerald-400">
-            <CheckCircle size={16} />
+          <div
+            role="status"
+            className={`mb-5 flex items-center gap-2 text-sm ${
+              saveError ? "text-red-400" : "text-emerald-400"
+            }`}
+          >
+            {saveError ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
             {saveMessage}
           </div>
         )}
