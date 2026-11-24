@@ -13,6 +13,7 @@ import {
   resolvePlayerTurn,
   resolveFailedAttack,
 } from "@/game/engine/BattleEngine";
+import { INITIAL_CHARACTER } from "@/game/types/character";
 
 import {
   getStoryReward,
@@ -123,9 +124,7 @@ export default function BattleInterface({
     useState<PlayerInventory>(INITIAL_INVENTORY);
 
   const [character, setCharacter] =
-    useState<PlayerCharacter>(() =>
-      createCharacter("Adventurer", "warrior")
-    );
+    useState<PlayerCharacter>(INITIAL_CHARACTER);
 
   const [characterLoaded, setCharacterLoaded] = useState(false);
 
