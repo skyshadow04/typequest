@@ -17,6 +17,8 @@ import {
   Save,
   Calendar,
   User,
+  Trash2,
+  X,
 } from "lucide-react";
 
 import {
@@ -36,6 +38,7 @@ import {
   replaceSaveSlots,
   activateSaveUser,
   saveGame,
+  deleteSaveSlot,
   type SaveSlot,
 } from "@/game/engine/SaveEngine";
 
@@ -87,6 +90,10 @@ export default function Home() {
 
   const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([]);
   const [activeSlotId, setActiveSlotId] = useState("");
+
+  const [slotToDelete, setSlotToDelete] = useState<SaveSlot | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const selectedStats = CHARACTER_CLASSES[selectedClass];
 
@@ -233,6 +240,57 @@ export default function Home() {
     setShowSaveSlots(false);
     setShowCharacterCreation(true);
   }
+
+  function openDeleteConfirmation(slot: SaveSlot) {
+    if (!slot.saveData?.character) return;
+
+    setSlotToDelete(slot);
+    setDeleteConfirmation("");
+  }
+
+  function closeDeleteConfirmation() {
+    if (isDeleting) return;
+
+    setSlotToDelete(null);
+    setDeleteConfirmation("");
+  }
+
+  function handleDeleteCharacter() {
+    if (!slotToDelete?.saveData?.character || isDeleting) return;
+
+    const requiredName = slotToDelete.saveData.character.name.trim();
+    const enteredName = deleteConfirmation.trim();
+
+    if (
+      enteredName.toLowerCase() !== requiredName.toLowerCase()
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    const deleted = deleteSaveSlot(slotToDelete.id);
+
+    if (!deleted) {
+      setIsDeleting(false);
+      alert("Unable to delete this character. Please try again.");
+      return;
+    }
+
+    setSlotToDelete(null);
+    setDeleteConfirmation("");
+    setIsDeleting(false);
+
+    refreshSaveSlots();
+  }
+
+  const requiredDeleteName =
+    slotToDelete?.saveData?.character.name.trim() ?? "";
+
+  const canConfirmDelete =
+    requiredDeleteName.length > 0 &&
+    deleteConfirmation.trim().toLowerCase() ===
+      requiredDeleteName.toLowerCase();
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#100f19] text-white p-6">
@@ -425,17 +483,29 @@ export default function Home() {
 
                         </div>
 
-                        <button
-                          onClick={() => continueAdventure(slot.id)}
-                          disabled={!save}
-                          className={`rounded-lg px-6 py-3 font-bold text-sm transition ${
-                            save
-                              ? "bg-amber-500 hover:bg-amber-400 text-black"
-                              : "bg-white/5 text-gray-600 cursor-not-allowed"
-                          }`}
-                        >
-                          {save ? "CONTINUE" : "EMPTY SLOT"}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            onClick={() => continueAdventure(slot.id)}
+                            disabled={!save}
+                            className={`rounded-lg px-6 py-3 font-bold text-sm transition ${
+                              save
+                                ? "bg-amber-500 hover:bg-amber-400 text-black"
+                                : "bg-white/5 text-gray-600 cursor-not-allowed"
+                            }`}
+                          >
+                            {save ? "CONTINUE" : "EMPTY SLOT"}
+                          </button>
+
+                          {save && character && (
+                            <button
+                              onClick={() => openDeleteConfirmation(slot)}
+                              className="flex items-center justify-center gap-2 rounded-lg border border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-4 py-3 font-bold text-sm transition"
+                            >
+                              <Trash2 size={16} />
+                              DELETE
+                            </button>
+                          )}
+                        </div>
 
                       </div>
                     </div>
@@ -596,6 +666,119 @@ export default function Home() {
           )}
 
         </div>
+
+        {/* DELETE CHARACTER CONFIRMATION */}
+        {slotToDelete && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-[#171522] p-6 shadow-2xl">
+
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-red-500/15 p-3">
+                    <Trash2 className="text-red-400" size={24} />
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl font-black text-red-300">
+                      DELETE CHARACTER
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Permanent save deletion
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={closeDeleteConfirmation}
+                  disabled={isDeleting}
+                  className="text-gray-500 hover:text-white transition disabled:opacity-40"
+                  aria-label="Close delete confirmation"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-300 leading-relaxed">
+                You are about to permanently delete{" "}
+                <span className="font-bold text-white">
+                  {requiredDeleteName}
+                </span>
+                . This will remove the character and its adventure progress.
+              </p>
+
+              <div className="mt-5">
+                <label
+                  htmlFor="delete-character-name"
+                  className="block text-sm font-bold text-gray-300 mb-2"
+                >
+                  Type the character name to confirm:
+                </label>
+
+                <div className="rounded-lg border border-white/10 bg-black/40 px-3 py-3 mb-3">
+                  <p className="text-amber-300 font-bold tracking-wide">
+                    {requiredDeleteName}
+                  </p>
+                </div>
+
+                <input
+                  id="delete-character-name"
+                  type="text"
+                  autoComplete="off"
+                  autoFocus
+                  value={deleteConfirmation}
+                  onChange={(event) =>
+                    setDeleteConfirmation(event.target.value)
+                  }
+                  placeholder="Enter character name..."
+                  disabled={isDeleting}
+                  className="w-full rounded-lg border border-white/20 bg-black/40 px-4 py-3 text-white outline-none focus:border-red-400 transition disabled:opacity-50"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && canConfirmDelete) {
+                      handleDeleteCharacter();
+                    }
+
+                    if (event.key === "Escape") {
+                      closeDeleteConfirmation();
+                    }
+                  }}
+                />
+
+                {deleteConfirmation.length > 0 && !canConfirmDelete && (
+                  <p className="text-xs text-red-400 mt-2">
+                    The character name does not match.
+                  </p>
+                )}
+
+                {canConfirmDelete && (
+                  <p className="text-xs text-green-400 mt-2">
+                    Character name confirmed.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-7">
+                <button
+                  onClick={closeDeleteConfirmation}
+                  disabled={isDeleting}
+                  className="flex-1 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 transition disabled:opacity-40"
+                >
+                  CANCEL
+                </button>
+
+                <button
+                  onClick={handleDeleteCharacter}
+                  disabled={!canConfirmDelete || isDeleting}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-black py-3 transition disabled:bg-red-950/50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={16} />
+                  {isDeleting ? "DELETING..." : "DELETE"}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
       </div>
     </main>
   );

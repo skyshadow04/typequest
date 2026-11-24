@@ -55,13 +55,6 @@ export const goblinBattlePassages = {
 
   "investigate-forest": [
     {
-      id: "silent-approach",
-      title: "Silent Approach",
-      description: "Approach the goblin without being noticed.",
-      difficulty: "easy",
-      text: "You move quietly between the trees, keeping your eyes on the goblin while the forest wind hides your footsteps.",
-    },
-    {
       id: "hidden-weakness",
       title: "Hidden Weakness",
       description: "Study the enemy before attacking.",

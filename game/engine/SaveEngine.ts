@@ -88,10 +88,7 @@ function readSlots(): SaveSlot[] {
     if (storedSlots) {
       const parsed: unknown = JSON.parse(storedSlots);
 
-      if (
-        Array.isArray(parsed) &&
-        parsed.every(isValidSlot)
-      ) {
+      if (Array.isArray(parsed) && parsed.every(isValidSlot)) {
         return parsed;
       }
     }
@@ -108,6 +105,27 @@ function writeSlots(slots: SaveSlot[]): void {
   localStorage.setItem(SLOTS_KEY, JSON.stringify(slots));
 }
 
+/**
+ * Synchronize the compatibility keys with the selected save.
+ *
+ * The save slot remains the source of truth.
+ * The global character key is only maintained for older game code.
+ */
+function syncLegacySave(saveData: GameSaveData | null): void {
+  if (typeof window === "undefined") return;
+
+  if (saveData) {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    localStorage.setItem(
+      CHARACTER_KEY,
+      JSON.stringify(saveData.character)
+    );
+  } else {
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(CHARACTER_KEY);
+  }
+}
+
 export function activateSaveUser(userId: string | null): void {
   if (typeof window === "undefined") return;
 
@@ -119,6 +137,7 @@ export function activateSaveUser(userId: string | null): void {
   localStorage.removeItem(SAVE_KEY);
   localStorage.removeItem(ACTIVE_SLOT_KEY);
   localStorage.removeItem(CHARACTER_KEY);
+
   localStorage.setItem(ACTIVE_USER_KEY, nextUserId);
 }
 
@@ -140,20 +159,11 @@ export function replaceSaveSlots(slots: SaveSlot[]): void {
   }
 
   const activeSlot = slots.find(
-    (slot) => slot.id === (localStorage.getItem(ACTIVE_SLOT_KEY) ?? "")
+    (slot) =>
+      slot.id === (localStorage.getItem(ACTIVE_SLOT_KEY) ?? "")
   );
 
   syncLegacySave(activeSlot?.saveData ?? null);
-}
-
-function syncLegacySave(saveData: GameSaveData | null): void {
-  if (typeof window === "undefined") return;
-
-  if (saveData) {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-  } else {
-    localStorage.removeItem(SAVE_KEY);
-  }
 }
 
 // Create the first slot and migrate the previous single save if necessary.
@@ -168,11 +178,13 @@ function ensureSlots(): SaveSlot[] {
 
   if (legacyDefaultSlot) {
     const migratedSlotId = crypto.randomUUID();
+
     slots = slots.map((slot) =>
       slot.id === LEGACY_DEFAULT_SLOT_ID
         ? { ...slot, id: migratedSlotId }
         : slot
     );
+
     writeSlots(slots);
 
     if (
@@ -241,7 +253,9 @@ export function getSaveSlots(): SaveSlot[] {
 
 // GET THE CURRENT ACTIVE SLOT ID
 export function getActiveSaveSlotId(): string {
-  if (typeof window === "undefined") return SERVER_DEFAULT_SLOT_ID;
+  if (typeof window === "undefined") {
+    return SERVER_DEFAULT_SLOT_ID;
+  }
 
   ensureSlots();
 
@@ -268,12 +282,13 @@ export function createSaveSlot(name: string): SaveSlot | null {
   if (!cleanName) return null;
 
   const slots = ensureSlots();
+  const now = new Date().toISOString();
 
   const newSlot: SaveSlot = {
     id: crypto.randomUUID(),
     name: cleanName,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
     saveData: null,
   };
 
@@ -312,9 +327,14 @@ export function renameSaveSlot(
   );
 
   writeSlots(updatedSlots);
-  void upsertSaveSlotToDatabase(
-    updatedSlots.find((slot) => slot.id === slotId)!
+
+  const updatedSlot = updatedSlots.find(
+    (slot) => slot.id === slotId
   );
+
+  if (updatedSlot) {
+    void upsertSaveSlotToDatabase(updatedSlot);
+  }
 
   return true;
 }
@@ -333,6 +353,7 @@ export function setActiveSaveSlot(slotId: string): boolean {
 
   localStorage.setItem(ACTIVE_SLOT_KEY, slotId);
 
+  // Always synchronize the character with the selected slot.
   syncLegacySave(selectedSlot.saveData);
 
   return true;
@@ -348,9 +369,7 @@ export function loadSaveSlot(
     (slot) => slot.id === slotId
   );
 
-  if (!selectedSlot) return null;
-
-  return selectedSlot.saveData;
+  return selectedSlot?.saveData ?? null;
 }
 
 // DELETE ONE SAVE SLOT
@@ -358,10 +377,6 @@ export function deleteSaveSlot(slotId: string): boolean {
   if (typeof window === "undefined") return false;
 
   const slots = ensureSlots();
-
-  if (slots.length <= 1) {
-    return false;
-  }
 
   const slotExists = slots.some(
     (slot) => slot.id === slotId
@@ -375,14 +390,41 @@ export function deleteSaveSlot(slotId: string): boolean {
 
   const activeSlotId = getActiveSaveSlotId();
 
-  if (activeSlotId === slotId) {
-    const nextSlot = remainingSlots[0];
+  let updatedSlots = remainingSlots;
+
+  // Keep at least one empty slot available for a new adventure.
+  if (updatedSlots.length === 0) {
+    const now = new Date().toISOString();
+
+    const replacementSlot: SaveSlot = {
+      id: crypto.randomUUID(),
+      name: "Adventure 1",
+      createdAt: now,
+      updatedAt: now,
+      saveData: null,
+    };
+
+    updatedSlots = [replacementSlot];
+
+    localStorage.setItem(ACTIVE_SLOT_KEY, replacementSlot.id);
+
+    void upsertSaveSlotToDatabase(replacementSlot);
+  } else if (activeSlotId === slotId) {
+    const nextSlot = updatedSlots[0];
 
     localStorage.setItem(ACTIVE_SLOT_KEY, nextSlot.id);
-    syncLegacySave(nextSlot.saveData);
   }
 
-  writeSlots(remainingSlots);
+  writeSlots(updatedSlots);
+
+  const nextActiveSlot = updatedSlots.find(
+    (slot) =>
+      slot.id === localStorage.getItem(ACTIVE_SLOT_KEY)
+  );
+
+  syncLegacySave(nextActiveSlot?.saveData ?? null);
+
+  // Remove the deleted slot from the user's database.
   void deleteSaveSlotFromDatabase(slotId);
 
   return true;
@@ -406,7 +448,12 @@ export async function saveGame(
       (slot) => slot.id === activeSlotId
     );
 
-    const existingSave = existingSlot?.saveData ?? null;
+    if (!existingSlot) {
+      console.error("Failed to save game: active save slot was not found.");
+      return false;
+    }
+
+    const existingSave = existingSlot.saveData;
 
     const saveData: GameSaveData = {
       version: 1,
@@ -436,16 +483,14 @@ export async function saveGame(
     );
 
     writeSlots(updatedSlots);
+
     const updatedSlot = updatedSlots.find(
       (slot) => slot.id === activeSlotId
     );
 
-    if (!updatedSlot) {
-      console.error("Failed to save game: active save slot was not found.");
-      return false;
-    }
+    if (!updatedSlot) return false;
 
-    // Keep the previous save key synchronized for compatibility.
+    // Synchronize only with the currently active slot.
     syncLegacySave(saveData);
 
     return await upsertSaveSlotToDatabase(updatedSlot);
@@ -468,6 +513,9 @@ export function loadGame(): GameSaveData | null {
       console.warn("Invalid save data.");
       return null;
     }
+
+    // Restore the selected slot's character.
+    syncLegacySave(activeSlot.saveData);
 
     return activeSlot.saveData;
   } catch (error) {

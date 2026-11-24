@@ -1,0 +1,705 @@
+{
+  "frames": {
+    "goblin-attack-00": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-01": {
+      "frame": {
+        "x": 298,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-02": {
+      "frame": {
+        "x": 596,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-03": {
+      "frame": {
+        "x": 894,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-04": {
+      "frame": {
+        "x": 1192,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-05": {
+      "frame": {
+        "x": 1490,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-06": {
+      "frame": {
+        "x": 1788,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-07": {
+      "frame": {
+        "x": 2086,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-08": {
+      "frame": {
+        "x": 0,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-09": {
+      "frame": {
+        "x": 298,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-10": {
+      "frame": {
+        "x": 596,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-11": {
+      "frame": {
+        "x": 894,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-12": {
+      "frame": {
+        "x": 1192,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-13": {
+      "frame": {
+        "x": 1490,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-14": {
+      "frame": {
+        "x": 1788,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-15": {
+      "frame": {
+        "x": 2086,
+        "y": 291,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-16": {
+      "frame": {
+        "x": 0,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-17": {
+      "frame": {
+        "x": 298,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-18": {
+      "frame": {
+        "x": 596,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-19": {
+      "frame": {
+        "x": 894,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-20": {
+      "frame": {
+        "x": 1192,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-21": {
+      "frame": {
+        "x": 1490,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-22": {
+      "frame": {
+        "x": 1788,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-23": {
+      "frame": {
+        "x": 2086,
+        "y": 582,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-24": {
+      "frame": {
+        "x": 0,
+        "y": 873,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    },
+    "goblin-attack-25": {
+      "frame": {
+        "x": 298,
+        "y": 873,
+        "w": 298,
+        "h": 291
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 298,
+        "h": 291
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 291
+      },
+      "pivot": {
+        "x": 0.4966,
+        "y": 0.8797
+      },
+      "duration": 62
+    }
+  },
+  "animations": {
+    "goblin-attack": [
+      "goblin-attack-00",
+      "goblin-attack-01",
+      "goblin-attack-02",
+      "goblin-attack-03",
+      "goblin-attack-04",
+      "goblin-attack-05",
+      "goblin-attack-06",
+      "goblin-attack-07",
+      "goblin-attack-08",
+      "goblin-attack-09",
+      "goblin-attack-10",
+      "goblin-attack-11",
+      "goblin-attack-12",
+      "goblin-attack-13",
+      "goblin-attack-14",
+      "goblin-attack-15",
+      "goblin-attack-16",
+      "goblin-attack-17",
+      "goblin-attack-18",
+      "goblin-attack-19",
+      "goblin-attack-20",
+      "goblin-attack-21",
+      "goblin-attack-22",
+      "goblin-attack-23",
+      "goblin-attack-24",
+      "goblin-attack-25"
+    ]
+  },
+  "meta": {
+    "app": "https://spritecanvas.com",
+    "image": "goblin-attack.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2384,
+      "h": 1164
+    },
+    "scale": "1",
+    "cell": {
+      "w": 298,
+      "h": 291
+    },
+    "fps": 16,
+    "loop": false,
+    "pivot_px": [
+      148,
+      256
+    ],
+    "license": "CC0-1.0"
+  }
+}

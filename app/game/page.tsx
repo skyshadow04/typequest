@@ -22,6 +22,7 @@ import {
 } from "@/game/engine/storyEngine";
 
 import type { StoryDecisions } from "@/game/types/story";
+import type { PlayerCharacter } from "@/game/types/character";
 
 import BattleInterface from "@/game/components/BattleInterface";
 
@@ -31,15 +32,13 @@ import {
   replaceSaveSlots,
   saveGame,
 } from "@/game/engine/SaveEngine";
+
 import {
   getCurrentSupabaseUser,
   syncSaveSlotsFromDatabase,
 } from "@/lib/supabase/database";
 
 import { INITIAL_INVENTORY } from "@/game/engine/InventoryEngine";
-import { createCharacter } from "@/game/engine/ClassEngine";
-
-import type { PlayerCharacter } from "@/game/types/character";
 
 export default function GamePage() {
   const [currentNodeId, setCurrentNodeId] = useState(
@@ -47,33 +46,58 @@ export default function GamePage() {
   );
 
   const [decisions, setDecisions] = useState<StoryDecisions>({});
+  const [character, setCharacter] = useState<PlayerCharacter | null>(null);
+
   const [gameLoaded, setGameLoaded] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState(false);
 
+  // LOAD THE SELECTED SAVE SLOT
   useEffect(() => {
     let active = true;
 
     async function initializeGame() {
-      const user = await getCurrentSupabaseUser();
-      if (!active) return;
+      try {
+        const user = await getCurrentSupabaseUser();
 
-      activateSaveUser(user?.id ?? null);
+        if (!active) return;
 
-      if (!user) {
-        replaceSaveSlots([]);
-        return;
-      }
+        if (!user) {
+          activateSaveUser(null);
+          replaceSaveSlots([]);
+          setGameLoaded(true);
+          return;
+        }
 
-      const databaseSlots = await syncSaveSlotsFromDatabase();
-      const currentUser = await getCurrentSupabaseUser();
+        activateSaveUser(user.id);
 
-      if (!active || currentUser?.id !== user.id) return;
-      if (databaseSlots !== null) replaceSaveSlots(databaseSlots);
+        const databaseSlots = await syncSaveSlotsFromDatabase();
+        const currentUser = await getCurrentSupabaseUser();
 
-      const savedGame = loadGame();
+        if (!active || currentUser?.id !== user.id) return;
 
-      if (savedGame) {
+        if (databaseSlots !== null) {
+          replaceSaveSlots(databaseSlots);
+        }
+
+        // Always load from the currently selected save slot.
+        const savedGame = loadGame();
+
+        if (!savedGame) {
+          setGameLoaded(true);
+          return;
+        }
+
+        // The selected slot's character is the source of truth.
+        setCharacter(savedGame.character);
+
+        // Keep compatibility with existing components that still
+        // read the shared character key.
+        localStorage.setItem(
+          "typequest-character",
+          JSON.stringify(savedGame.character)
+        );
+
         const savedNode = getStoryNode(
           chapter1,
           savedGame.currentNodeId
@@ -83,9 +107,15 @@ export default function GamePage() {
           setCurrentNodeId(savedGame.currentNodeId);
           setDecisions(savedGame.decisions as StoryDecisions);
         }
-      }
 
-      setGameLoaded(true);
+        setGameLoaded(true);
+      } catch (error) {
+        console.error("Failed to initialize game:", error);
+
+        if (active) {
+          setGameLoaded(true);
+        }
+      }
     }
 
     void initializeGame();
@@ -95,30 +125,16 @@ export default function GamePage() {
     };
   }, []);
 
-  // Automatically save story progress.
+  // AUTOMATICALLY SAVE STORY PROGRESS
   useEffect(() => {
-    if (!gameLoaded) return;
-
-    const savedGame = loadGame();
-
-    let character: PlayerCharacter;
-
-    try {
-      const storedCharacter = localStorage.getItem(
-        "typequest-character"
-      );
-
-      character = storedCharacter
-        ? JSON.parse(storedCharacter)
-        : createCharacter("Adventurer", "warrior");
-    } catch {
-      character = createCharacter("Adventurer", "warrior");
-    }
-
-    const inventory = savedGame?.inventory ?? INITIAL_INVENTORY;
+    if (!gameLoaded || !character) return;
 
     let active = true;
 
+    const savedGame = loadGame();
+    const inventory = savedGame?.inventory ?? INITIAL_INVENTORY;
+
+    // Always save the character belonging to this selected slot.
     void saveGame(
       character,
       inventory,
@@ -126,7 +142,9 @@ export default function GamePage() {
       decisions
     ).then((success) => {
       if (!active) return;
+
       setSaveError(!success);
+
       setSaveMessage(
         success
           ? "Progress saved to your account."
@@ -137,23 +155,16 @@ export default function GamePage() {
     return () => {
       active = false;
     };
-  }, [currentNodeId, decisions, gameLoaded]);
+  }, [currentNodeId, decisions, gameLoaded, character]);
 
   const currentNode = getStoryNode(chapter1, currentNodeId);
 
+  // MANUAL SAVE
   async function handleManualSave() {
-    let character: PlayerCharacter;
-
-    try {
-      const storedCharacter = localStorage.getItem(
-        "typequest-character"
-      );
-
-      character = storedCharacter
-        ? JSON.parse(storedCharacter)
-        : createCharacter("Adventurer", "warrior");
-    } catch {
-      character = createCharacter("Adventurer", "warrior");
+    if (!character) {
+      setSaveError(true);
+      setSaveMessage("No character was loaded. Your game was not saved.");
+      return;
     }
 
     const savedGame = loadGame();
@@ -170,6 +181,7 @@ export default function GamePage() {
     );
 
     setSaveError(!success);
+
     setSaveMessage(
       success
         ? "Game saved to your account."
@@ -226,6 +238,39 @@ export default function GamePage() {
     );
   }
 
+  // Do not create a replacement character from shared localStorage.
+  if (!character) {
+    return (
+      <main className="min-h-screen bg-[#100f19] text-white flex items-center justify-center p-6">
+        <div className="max-w-md text-center bg-white/5 border border-white/10 rounded-xl p-8">
+          <AlertCircle
+            size={40}
+            className="text-amber-400 mx-auto mb-4"
+          />
+
+          <h1 className="text-2xl font-bold text-amber-300 mb-3">
+            No Saved Character Found
+          </h1>
+
+          <p className="text-gray-400 mb-6">
+            This adventure does not contain valid character data.
+            Return to the main menu and select another save slot
+            or create a new adventure.
+          </p>
+
+          <button
+            onClick={() => {
+              window.location.href = "/";
+            }}
+            className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-3 rounded-lg transition"
+          >
+            Return to Main Menu
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   if (!currentNode) {
     return <div>Story node not found.</div>;
   }
@@ -239,7 +284,7 @@ export default function GamePage() {
     <main className="min-h-screen bg-[#100f19] text-white p-6">
       <div className="max-w-4xl mx-auto">
 
-        {/* Header */}
+        {/* HEADER */}
         <header className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center mb-8">
           <div>
             <p className="text-amber-400 text-sm tracking-widest">
@@ -249,6 +294,11 @@ export default function GamePage() {
             <h1 className="text-2xl font-bold">
               {chapter1.title}
             </h1>
+
+            <p className="text-sm text-gray-400 mt-1">
+              Playing as {character.name} the{" "}
+              {character.characterClass}
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -270,7 +320,7 @@ export default function GamePage() {
           </div>
         </header>
 
-        {/* Save Message */}
+        {/* SAVE MESSAGE */}
         {saveMessage && (
           <div
             role="status"
@@ -278,12 +328,17 @@ export default function GamePage() {
               saveError ? "text-red-400" : "text-emerald-400"
             }`}
           >
-            {saveError ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
+            {saveError ? (
+              <AlertCircle size={16} />
+            ) : (
+              <CheckCircle size={16} />
+            )}
+
             {saveMessage}
           </div>
         )}
 
-        {/* Story Panel */}
+        {/* STORY PANEL */}
         <section className="bg-white/5 border border-white/10 rounded-xl p-6 md:p-10">
 
           <div className="flex items-center gap-2 text-amber-400 mb-6">
@@ -309,7 +364,7 @@ export default function GamePage() {
             ))}
           </div>
 
-          {/* Narrative Controls */}
+          {/* NARRATIVE CONTROLS */}
           {currentNode.type === "narrative" && (
             <button
               onClick={handleContinue}
@@ -320,7 +375,7 @@ export default function GamePage() {
             </button>
           )}
 
-          {/* Player Choices */}
+          {/* PLAYER CHOICES */}
           {currentNode.type === "choice" && (
             <div className="space-y-4">
               <h3 className="text-amber-400 font-semibold">
@@ -357,7 +412,7 @@ export default function GamePage() {
             </div>
           )}
 
-          {/* Combat */}
+          {/* COMBAT */}
           {currentNode.type === "combat" && (
             <div className="mt-8 border-t border-white/10 pt-8">
               <div className="bg-red-950/30 border border-red-500/30 rounded-lg p-5 mb-6">
@@ -386,7 +441,7 @@ export default function GamePage() {
           )}
         </section>
 
-        {/* Decision History */}
+        {/* DECISION HISTORY */}
         <section className="mt-6 bg-white/5 rounded-xl border border-white/10 p-5">
           <h3 className="text-sm font-semibold text-gray-400 mb-3">
             YOUR STORY DECISIONS
